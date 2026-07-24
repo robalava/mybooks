@@ -272,7 +272,7 @@ h1{
   </header>
 
   <div class="bar">
-    <select id="fRec" aria-label="すすめてくれた人でしぼる"><option value="">すべての人</option></select>
+    <select id="fRec" aria-label="誰の本箱かをしぼる"><option value="">すべての人</option></select>
     <select id="fSta" aria-label="読んだ状態でしぼる">
       <option value="">すべての状態</option>
       <option>未読</option><option>読書中</option><option>読了</option>
@@ -531,7 +531,7 @@ function openModal(b, origin){
     [b.publisher, b.pubdate, b.isbn13 ? 'ISBN ' + b.isbn13 : ''].filter(Boolean).join(' ／ ');
 
   var tags = '';
-  if(b.recommender) tags += '<span class="tag rec">' + esc(b.recommender) + ' のすすめ</span>';
+  if(b.recommender) tags += '<span class="tag rec">' + esc(b.recommender) + ' の本</span>';
   if(b.status) tags += '<span class="tag">' + esc(b.status) + '</span>';
   document.getElementById('mTags').innerHTML = tags;
   document.getElementById('mComment').textContent = b.comment || '';
