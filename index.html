@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ひとくぎりの本の棚</title>
+<title>すすめられた本の棚</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@ body{
   font-family:var(--gothic);font-size:15px;line-height:1.8;
   -webkit-font-smoothing:antialiased;
 }
-.wrap{max-width:1080px;margin:0 auto;padding:44px 20px 90px}
+.wrap{max-width:560px;margin:0 auto;padding:44px 20px 90px}
 
 /* ---------- 見出し ---------- */
 header{text-align:center;margin-bottom:26px}
@@ -110,6 +110,9 @@ h1{
   box-shadow:0 7px 12px -5px rgba(20,12,4,.75);
   margin-bottom:20px;
 }
+
+/* 本が入っていない場所。段の高さを保つためだけの空き */
+.slot{width:100%}
 
 /* ---------- 本 ---------- */
 .book{
@@ -239,14 +242,20 @@ h1{
   .case::after{ display:none; }
 
   .bay{ padding:0 3mm; box-shadow:0 3mm 4mm -3mm rgba(0,0,0,.45) inset; }
-  .rowbooks{ gap:4mm; padding-top:5mm; }
+  .rowbooks{ gap:4mm; padding-top:5mm; justify-items:center; }
 
   .shelf{ margin-bottom:0; break-inside:avoid; page-break-inside:avoid; }
   .plank{ height:4mm; margin-bottom:0; box-shadow:none; }
 
-  .book{ transform:none !important; }
+  /* 段数から出した高さを使い、幅は縦横比から逆算する */
+  .cover, .slot{
+    height:var(--print-cover-h) !important;
+    width:calc(var(--print-cover-h) / var(--r)) !important;
+    aspect-ratio:auto !important;
+  }
+  .book{ width:auto !important; transform:none !important; }
   .book::after{ display:none; }
-  .cover{ box-shadow:0 0 0 .2mm rgba(60,45,25,.45); }
+  .cover{ box-shadow:0 0 0 .2mm rgba(60,45,25,.45) !important; }
   .cover::before{
     background:linear-gradient(90deg,rgba(255,255,255,.3) 0 .4mm,rgba(0,0,0,.22) .4mm 1.6mm,rgba(0,0,0,0) 3mm);
   }
@@ -305,7 +314,8 @@ var API = 'https://script.google.com/macros/s/AKfycbykC1LCeTNl7lWX5fYZqbUQ8wxWD1
 
 var SHELF_TITLE = '○○の本棚';                       // 棚の名前（画面にも印刷にも出ます）
 var SHELF_LEDE  = '人から教わった本だけを並べています'; // 見出しの下の一行。不要なら '' に
-var PRINT_COLS  = 4;                                 // 印刷するとき1段に並べる冊数
+var COLS        = 3;                                 // 1段に並べる冊数
+var MIN_ROWS    = 3;                                 // 本が少なくても、これだけの段を出す
 
 document.getElementById('shelfTitle').textContent = SHELF_TITLE;
 document.title = SHELF_TITLE;
@@ -362,17 +372,33 @@ function shape(b){
 /* ===== 棚を描く ===== */
 var PRINTING = false;
 
-function perRow(){
-  if(PRINTING) return PRINT_COLS;
-  var w = document.querySelector('.case').clientWidth;
-  return Math.max(2, Math.min(6, Math.floor(w / 168)));
+/* 冊数から段数を出す。本が少なくても MIN_ROWS 段は出し、
+   COLS×MIN_ROWS 冊を超えたぶんだけ段が増える。 */
+function rowCount(n){
+  return Math.max(MIN_ROWS, Math.ceil(n / COLS));
 }
 
-/* 印刷の直前だけ、画面幅に関係なく PRINT_COLS 冊ずつに組み直す */
 function setPrinting(on){
   if(PRINTING === on) return;
   PRINTING = on;
-  if(BOOKS.length) render();
+  render();
+}
+
+/* ===== 印刷：その時の段数にあわせてA4一枚に収める ===== */
+function fitToPage(rows){
+  var PAGE_H   = 273;  // A4たて297mm − 上下余白12mm×2
+  var PAGE_W   = 186;  // A4よこ210mm − 左右余白12mm×2
+  var HEADER   = 20;   // 見出しのぶん
+  var CASE_PAD = 5;    // 棚枠の上下
+  var SHELF_EXTRA = 9; // 段ごとの余白と棚板の厚み
+  var MIN_H    = 22;   // これ以上は小さくしない（読めなくなるため）
+
+  var colW = (PAGE_W - 8 - 6 - (COLS - 1) * 4) / COLS;
+  var byWidth  = colW * 1.36;                                 // 横幅から決まる上限
+  var byHeight = (PAGE_H - HEADER - CASE_PAD) / rows - SHELF_EXTRA;
+
+  var h = Math.max(MIN_H, Math.min(byWidth, byHeight));
+  document.documentElement.style.setProperty('--print-cover-h', h.toFixed(1) + 'mm');
 }
 document.getElementById('btnPrint').addEventListener('click', function(){
   setPrinting(true);
@@ -394,10 +420,21 @@ function render(){
   });
   document.getElementById('count').textContent = '全 ' + VIEW.length + ' 冊';
 
+  var note = document.getElementById('state');
+  if(VIEW.length){
+    note.style.display = 'none';
+  } else {
+    note.style.display = '';
+    note.textContent = BOOKS.length
+      ? 'この条件に合う本はありません'
+      : 'まだ本がありません。登録画面から追加してください。';
+  }
+
   var host = document.getElementById('shelves');
   host.innerHTML = '';
-  var n = perRow();
-  var rows = Math.max(1, Math.ceil(VIEW.length / n));
+  var n = COLS;
+  var rows = rowCount(VIEW.length);
+  fitToPage(rows);
 
   for(var i = 0; i < rows; i++){
     var chunk = VIEW.slice(i * n, i * n + n);
@@ -422,12 +459,23 @@ function render(){
       var box = document.createElement('div');
       box.className = 'cover';
       box.style.aspectRatio = '1 / ' + sp.ratio.toFixed(3);
+      box.style.setProperty('--r', sp.ratio.toFixed(3));
       mountCover(box, b);
 
       btn.appendChild(box);
       btn.addEventListener('click', function(){ openModal(b, btn); });
       row.appendChild(btn);
     });
+
+    // 本の入っていない場所には、段の高さを保つための空きを置く
+    for(var k = chunk.length; k < n; k++){
+      var slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.setAttribute('aria-hidden', 'true');
+      slot.style.aspectRatio = '1 / 1.45';
+      slot.style.setProperty('--r', '1.45');
+      row.appendChild(slot);
+    }
 
     bay.appendChild(row);
     shelf.appendChild(bay);
@@ -475,6 +523,7 @@ function openModal(b, origin){
   LAST = origin;
   var mc = document.getElementById('mCover');
   mc.style.aspectRatio = '1 / ' + shape(b).ratio.toFixed(3);
+  mc.style.setProperty('--r', shape(b).ratio.toFixed(3));
   mountCover(mc, b);
   document.getElementById('mTitle').textContent = b.title;
   document.getElementById('mAuthor').textContent = b.author || '';
@@ -510,12 +559,6 @@ document.addEventListener('keydown', function(e){
 });
 
 /* ===== 補助 ===== */
-var t;
-window.addEventListener('resize', function(){
-  clearTimeout(t);
-  t = setTimeout(function(){ if(BOOKS.length) render(); }, 150);
-});
-
 function esc(s){
   return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
