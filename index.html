@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ひとくぎりの本の棚</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wall:#e8e3da;
+  --ink:#241f18;
+  --sub:#7c7568;
+  --card:#fffdf8;
+  --accent:#3a5a52;
+
+  --wood-lit:#9a7048;
+  --wood:#7a5433;
+  --wood-mid:#664429;
+  --wood-dark:#48301d;
+  --wood-deep:#33210f;
+
+  --mincho:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --gothic:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--wall);
+  background-image:radial-gradient(120% 80% at 50% 0%,rgba(255,255,255,.55),rgba(0,0,0,0) 70%);
+  color:var(--ink);
+  font-family:var(--gothic);font-size:15px;line-height:1.8;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:44px 20px 90px}
+
+/* ---------- 見出し ---------- */
+header{text-align:center;margin-bottom:26px}
+h1{
+  font-family:var(--mincho);font-weight:500;font-size:29px;letter-spacing:.2em;
+  margin:0 0 8px;text-indent:.2em;
+}
+.lede{color:var(--sub);font-size:12.5px;letter-spacing:.14em;margin:0}
+
+/* ---------- 絞り込み ---------- */
+.bar{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;
+  margin:0 0 22px;
+}
+.bar select{
+  font:inherit;font-size:12.5px;color:var(--ink);background:rgba(255,255,255,.6);
+  border:1px solid rgba(70,55,35,.22);padding:5px 26px 5px 10px;border-radius:2px;
+  cursor:pointer;appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--sub) 50%),linear-gradient(135deg,var(--sub) 50%,transparent 50%);
+  background-position:calc(100% - 13px) 13px,calc(100% - 8px) 13px;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+}
+.bar select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.printbtn{
+  font:inherit;font-size:12.5px;letter-spacing:.08em;color:var(--ink);cursor:pointer;
+  background:rgba(255,255,255,.6);border:1px solid rgba(70,55,35,.28);
+  border-radius:2px;padding:5px 16px;
+}
+.printbtn:hover{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.printbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.count{font-size:11.5px;color:var(--sub);letter-spacing:.16em}
+
+/* ---------- 本棚の枠 ---------- */
+.case{
+  position:relative;padding:20px 20px 14px;border-radius:3px;
+  background:
+    repeating-linear-gradient(180deg,
+      rgba(255,255,255,.05) 0 1px, rgba(0,0,0,.06) 1px 3px, rgba(0,0,0,0) 3px 9px),
+    linear-gradient(90deg,var(--wood-lit),var(--wood) 18%,var(--wood-mid) 82%,var(--wood-dark));
+  box-shadow:
+    0 2px 0 rgba(255,255,255,.18) inset,
+    0 26px 46px -22px rgba(48,32,16,.65),
+    0 0 0 1px rgba(40,26,12,.35);
+}
+.case::after{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:3px;
+  background:linear-gradient(180deg,rgba(255,244,225,.14),rgba(0,0,0,0) 34%,rgba(0,0,0,.16));
+}
+
+/* ---------- 棚一段 ---------- */
+.shelf{margin-bottom:6px}
+.bay{
+  position:relative;padding:0 12px;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(255,255,255,.028) 0 2px, rgba(0,0,0,.05) 2px 4px, rgba(0,0,0,0) 4px 13px),
+    linear-gradient(180deg,var(--wood-deep),#3d280f);
+  box-shadow:
+    0 12px 16px -12px rgba(0,0,0,.9) inset,
+    0 -6px 10px -8px rgba(0,0,0,.7) inset;
+}
+.rowbooks{
+  display:grid;gap:16px;align-items:end;padding:26px 0 0;position:relative;z-index:1;
+}
+
+/* 棚板 */
+.plank{
+  position:relative;height:19px;border-radius:1px;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(255,255,255,.05) 0 3px, rgba(0,0,0,.05) 3px 6px, rgba(0,0,0,0) 6px 15px),
+    linear-gradient(180deg,
+      var(--wood-lit) 0 5px, var(--wood) 5px 9px, var(--wood-mid) 9px 13px, var(--wood-deep) 13px 100%);
+  box-shadow:0 7px 12px -5px rgba(20,12,4,.75);
+  margin-bottom:20px;
+}
+
+/* ---------- 本 ---------- */
+.book{
+  display:block;padding:0;border:0;background:none;cursor:pointer;
+  width:100%;text-align:left;font:inherit;color:inherit;justify-self:center;
+  position:relative;transition:transform .2s ease;
+}
+.book:hover,.book:focus-visible{transform:translateY(-7px)}
+.book:focus-visible{outline:2px solid #f0d9a8;outline-offset:5px}
+.book::after{ /* 棚板に落ちる影 */
+  content:"";position:absolute;left:6%;right:6%;bottom:-7px;height:9px;
+  background:rgba(0,0,0,.55);filter:blur(5px);border-radius:50%;
+  transition:opacity .2s ease;
+}
+.book:hover::after{opacity:.45}
+
+.cover{
+  position:relative;width:100%;background:var(--card);overflow:hidden;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.5),
+    0 10px 16px -8px rgba(0,0,0,.7);
+}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.cover::before{ /* 小口・ノドの陰影 */
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.26) 0 1px,rgba(0,0,0,.34) 1px 6px,rgba(0,0,0,0) 12px),
+    linear-gradient(270deg,rgba(0,0,0,.22),rgba(0,0,0,0) 14%);
+}
+
+/* 書影のない本：縦組みの明朝で表紙を組む */
+.ph{
+  width:100%;height:100%;background:#efe9dc;
+  display:flex;align-items:center;justify-content:center;padding:14px 10px;
+}
+.ph .band{
+  border-left:1px solid rgba(36,31,24,.28);
+  border-right:1px solid rgba(36,31,24,.28);
+  padding:10px 7px;max-height:100%;overflow:hidden;
+}
+.ph b{
+  font-family:var(--mincho);font-weight:400;font-size:13.5px;color:#2c261d;
+  writing-mode:vertical-rl;letter-spacing:.18em;line-height:1.55;max-height:100%;
+}
+
+/* ---------- モーダル ---------- */
+.veil{
+  position:fixed;inset:0;background:rgba(24,16,8,.62);
+  display:none;align-items:center;justify-content:center;padding:20px;z-index:30;
+}
+.veil.open{display:flex}
+.modal{
+  background:var(--card);max-width:530px;width:100%;padding:30px;position:relative;
+  border-radius:2px;box-shadow:0 26px 70px -22px rgba(0,0,0,.7);
+  max-height:88vh;overflow:auto;
+}
+.close{
+  position:absolute;top:12px;right:14px;border:0;background:none;
+  font-size:22px;line-height:1;color:var(--sub);cursor:pointer;padding:4px 8px;
+}
+.close:focus-visible{outline:2px solid var(--accent)}
+.mhead{display:flex;gap:22px;align-items:flex-start}
+.mhead .cover{width:124px;flex:0 0 auto}
+.mtitle{font-family:var(--mincho);font-size:21px;font-weight:500;line-height:1.5;margin:0}
+.mauthor{font-size:14px;color:var(--sub);margin:7px 0 0}
+.mmeta{font-size:12px;color:var(--sub);margin:10px 0 0;letter-spacing:.04em}
+.mbody{margin-top:24px;padding-top:18px;border-top:1px solid rgba(70,55,35,.18)}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tag{font-size:11.5px;letter-spacing:.1em;padding:3px 12px;border:1px solid rgba(70,55,35,.28);color:var(--sub)}
+.tag.rec{border-color:var(--accent);color:var(--accent)}
+.mcomment{font-family:var(--mincho);font-size:15px;line-height:2.05;margin:0}
+.mlinks{margin-top:24px;display:flex;gap:10px;flex-wrap:wrap}
+.mlinks a{
+  font-size:12.5px;letter-spacing:.06em;text-decoration:none;color:var(--ink);
+  border:1px solid var(--ink);padding:7px 16px;
+}
+.mlinks a:hover{background:var(--ink);color:var(--card)}
+.mlinks a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.state{color:var(--sub);font-size:13px;text-align:center;padding:36px 0}
+
+@media (max-width:560px){
+  .wrap{padding:30px 12px 60px}
+  h1{font-size:22px}
+  .case{padding:14px 12px 10px}
+  .bay{padding:0 8px}
+  .rowbooks{gap:11px;padding-top:18px}
+  .plank{height:14px;margin-bottom:14px}
+  .mhead{flex-direction:column}
+  .mhead .cover{width:104px}
+  .modal{padding:22px}
+}
+@media (prefers-reduced-motion:reduce){
+  .book{transition:none}
+  .book:hover,.book:focus-visible{transform:none}
+}
+
+/* ==================== 印刷（A4たて） ==================== */
+@page{ size:A4 portrait; margin:12mm; }
+
+@media print{
+  *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+  /* 印刷では木を明るくして、トナーを節約しつつ見本の色味に寄せる */
+  :root{
+    --wood-lit:#d3ab7c;
+    --wood:#c09763;
+    --wood-mid:#b0854f;
+    --wood-dark:#9a713e;
+    --wood-deep:#8a6234;
+  }
+
+  body{ background:#fbf8f0; background-image:none; }
+  .wrap{ max-width:none; margin:0; padding:0; }
+
+  /* 画面用の操作類は刷らない */
+  .bar, .state, .veil, .printbtn{ display:none !important; }
+
+  header{ margin:0 0 7mm; }
+  h1{ font-size:20pt; letter-spacing:.18em; margin-bottom:3mm; }
+  .lede{ font-size:8pt; letter-spacing:.12em; }
+
+  .case{
+    padding:4mm 4mm 1mm; border-radius:0;
+    box-shadow:0 0 0 .3mm rgba(90,62,30,.55);
+  }
+  .case::after{ display:none; }
+
+  .bay{ padding:0 3mm; box-shadow:0 3mm 4mm -3mm rgba(0,0,0,.45) inset; }
+  .rowbooks{ gap:4mm; padding-top:5mm; }
+
+  .shelf{ margin-bottom:0; break-inside:avoid; page-break-inside:avoid; }
+  .plank{ height:4mm; margin-bottom:0; box-shadow:none; }
+
+  .book{ transform:none !important; }
+  .book::after{ display:none; }
+  .cover{ box-shadow:0 0 0 .2mm rgba(60,45,25,.45); }
+  .cover::before{
+    background:linear-gradient(90deg,rgba(255,255,255,.3) 0 .4mm,rgba(0,0,0,.22) .4mm 1.6mm,rgba(0,0,0,0) 3mm);
+  }
+  .ph b{ font-size:9pt; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1 id="shelfTitle"></h1>
+    <p class="lede" id="shelfLede"></p>
+  </header>
+
+  <div class="bar">
+    <select id="fRec" aria-label="すすめてくれた人でしぼる"><option value="">すべての人</option></select>
+    <select id="fSta" aria-label="読んだ状態でしぼる">
+      <option value="">すべての状態</option>
+      <option>未読</option><option>読書中</option><option>読了</option>
+    </select>
+    <span class="count" id="count"></span>
+    <button class="printbtn" id="btnPrint">この棚を印刷する</button>
+  </div>
+
+  <div class="case">
+    <div id="shelves"></div>
+  </div>
+
+  <p class="state" id="state">棚を読み込んでいます…</p>
+
+</div>
+
+<div class="veil" id="veil" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="modal">
+    <button class="close" id="mClose" aria-label="閉じる">&times;</button>
+    <div class="mhead">
+      <div class="cover" id="mCover"></div>
+      <div>
+        <h2 class="mtitle" id="mTitle"></h2>
+        <p class="mauthor" id="mAuthor"></p>
+        <p class="mmeta" id="mMeta"></p>
+      </div>
+    </div>
+    <div class="mbody">
+      <div class="tags" id="mTags"></div>
+      <p class="mcomment" id="mComment"></p>
+    </div>
+    <div class="mlinks" id="mLinks"></div>
+  </div>
+</div>
+
+<script>
+/* ===== 設定：ここだけ書き換えれば使えます ===== */
+var API = 'https://script.google.com/macros/s/AKfycbykC1LCeTNl7lWX5fYZqbUQ8wxWD1QlRQbTl-BCH8-1bFj_tNa6nR6b-dHiNzrqmN-T/exec';
+
+var SHELF_TITLE = '○○の本棚';                       // 棚の名前（画面にも印刷にも出ます）
+var SHELF_LEDE  = '人から教わった本だけを並べています'; // 見出しの下の一行。不要なら '' に
+var PRINT_COLS  = 4;                                 // 印刷するとき1段に並べる冊数
+
+document.getElementById('shelfTitle').textContent = SHELF_TITLE;
+document.title = SHELF_TITLE;
+var lede = document.getElementById('shelfLede');
+if(SHELF_LEDE){ lede.textContent = SHELF_LEDE; } else { lede.style.display = 'none'; }
+
+var BOOKS = [], VIEW = [], LAST = null;
+
+/* ===== JSONPで取得 ===== */
+function jsonp(params, cb){
+  var name = 'cb_' + Math.random().toString(36).slice(2);
+  var s = document.createElement('script');
+  window[name] = function(res){ cb(res); delete window[name]; s.remove(); };
+  s.onerror = function(){ cb({ok:false, error:'通信に失敗しました'}); };
+  s.src = API + '?' + params + (params ? '&' : '') + 'callback=' + name;
+  document.body.appendChild(s);
+}
+
+jsonp('', function(res){
+  if(!res.ok){ document.getElementById('state').textContent = '読み込めませんでした：' + res.error; return; }
+  BOOKS = res.books || [];
+  document.getElementById('state').style.display = 'none';
+  fillFilters();
+  render();
+});
+
+function fillFilters(){
+  var names = [];
+  BOOKS.forEach(function(b){ if(b.recommender && names.indexOf(b.recommender) < 0) names.push(b.recommender); });
+  var sel = document.getElementById('fRec');
+  names.sort().forEach(function(n){
+    var o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o);
+  });
+  ['fRec','fSta'].forEach(function(id){
+    document.getElementById(id).addEventListener('change', render);
+  });
+}
+
+/* ===== 判で押したように見えないよう、判型を少しだけ散らす ===== */
+function hash(s){
+  var h = 5381;
+  s = String(s || '');
+  for(var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  return h;
+}
+function shape(b){
+  var h = hash(b.id || b.title);
+  return {
+    ratio: 1.36 + (h % 10) / 62,        // 縦横比 1.36〜1.51
+    width: 90 + ((h >> 5) % 11)         // セル幅の 90〜100%
+  };
+}
+
+/* ===== 棚を描く ===== */
+var PRINTING = false;
+
+function perRow(){
+  if(PRINTING) return PRINT_COLS;
+  var w = document.querySelector('.case').clientWidth;
+  return Math.max(2, Math.min(6, Math.floor(w / 168)));
+}
+
+/* 印刷の直前だけ、画面幅に関係なく PRINT_COLS 冊ずつに組み直す */
+function setPrinting(on){
+  if(PRINTING === on) return;
+  PRINTING = on;
+  if(BOOKS.length) render();
+}
+document.getElementById('btnPrint').addEventListener('click', function(){
+  setPrinting(true);
+  window.print();
+});
+window.addEventListener('beforeprint', function(){ setPrinting(true); });
+window.addEventListener('afterprint', function(){ setPrinting(false); });
+
+var mqPrint = window.matchMedia ? window.matchMedia('print') : null;
+if(mqPrint && mqPrint.addListener){
+  mqPrint.addListener(function(m){ setPrinting(m.matches); });
+}
+
+function render(){
+  var r = document.getElementById('fRec').value;
+  var s = document.getElementById('fSta').value;
+  VIEW = BOOKS.filter(function(b){
+    return (!r || b.recommender === r) && (!s || b.status === s);
+  });
+  document.getElementById('count').textContent = '全 ' + VIEW.length + ' 冊';
+
+  var host = document.getElementById('shelves');
+  host.innerHTML = '';
+  var n = perRow();
+  var rows = Math.max(1, Math.ceil(VIEW.length / n));
+
+  for(var i = 0; i < rows; i++){
+    var chunk = VIEW.slice(i * n, i * n + n);
+
+    var shelf = document.createElement('div');
+    shelf.className = 'shelf';
+
+    var bay = document.createElement('div');
+    bay.className = 'bay';
+
+    var row = document.createElement('div');
+    row.className = 'rowbooks';
+    row.style.gridTemplateColumns = 'repeat(' + n + ', minmax(0,1fr))';
+
+    chunk.forEach(function(b){
+      var sp = shape(b);
+      var btn = document.createElement('button');
+      btn.className = 'book';
+      btn.style.width = sp.width + '%';
+      btn.setAttribute('aria-label', b.title + ' の詳細をひらく');
+
+      var box = document.createElement('div');
+      box.className = 'cover';
+      box.style.aspectRatio = '1 / ' + sp.ratio.toFixed(3);
+      mountCover(box, b);
+
+      btn.appendChild(box);
+      btn.addEventListener('click', function(){ openModal(b, btn); });
+      row.appendChild(btn);
+    });
+
+    bay.appendChild(row);
+    shelf.appendChild(bay);
+
+    var plank = document.createElement('div');
+    plank.className = 'plank';
+    shelf.appendChild(plank);
+    host.appendChild(shelf);
+  }
+}
+
+/* ===== 表紙 ===== */
+function mountCover(box, b){
+  if(!b.img){ box.innerHTML = placeholder(b.title); return; }
+  var img = document.createElement('img');
+  img.src = b.img;
+  img.alt = b.title + 'の表紙';
+  img.loading = PRINTING ? 'eager' : 'lazy';
+  img.onerror = function(){ recover(box, b); };
+  box.innerHTML = '';
+  box.appendChild(img);
+}
+
+function placeholder(title){
+  return '<div class="ph"><div class="band"><b>' + esc(title) + '</b></div></div>';
+}
+
+function recover(box, b){
+  if(!b.fallback){ box.innerHTML = placeholder(b.title); return; }
+  jsonp('mode=cover&id=' + b.fallback, function(res){
+    if(res.ok && res.dataUrl){
+      var img = document.createElement('img');
+      img.src = res.dataUrl;
+      img.alt = b.title + 'の表紙';
+      box.innerHTML = '';
+      box.appendChild(img);
+    } else {
+      box.innerHTML = placeholder(b.title);
+    }
+  });
+}
+
+/* ===== モーダル ===== */
+function openModal(b, origin){
+  LAST = origin;
+  var mc = document.getElementById('mCover');
+  mc.style.aspectRatio = '1 / ' + shape(b).ratio.toFixed(3);
+  mountCover(mc, b);
+  document.getElementById('mTitle').textContent = b.title;
+  document.getElementById('mAuthor').textContent = b.author || '';
+  document.getElementById('mMeta').textContent =
+    [b.publisher, b.pubdate, b.isbn13 ? 'ISBN ' + b.isbn13 : ''].filter(Boolean).join(' ／ ');
+
+  var tags = '';
+  if(b.recommender) tags += '<span class="tag rec">' + esc(b.recommender) + ' のすすめ</span>';
+  if(b.status) tags += '<span class="tag">' + esc(b.status) + '</span>';
+  document.getElementById('mTags').innerHTML = tags;
+  document.getElementById('mComment').textContent = b.comment || '';
+
+  var links = '';
+  if(b.link) links += '<a href="' + b.link + '" target="_blank" rel="noopener">この本を調べる</a>';
+  if(b.isbn13) links += '<a href="https://calil.jp/book/' + b.isbn13 + '" target="_blank" rel="noopener">図書館で探す</a>';
+  document.getElementById('mLinks').innerHTML = links;
+
+  document.getElementById('veil').classList.add('open');
+  document.getElementById('mClose').focus();
+}
+
+function closeModal(){
+  document.getElementById('veil').classList.remove('open');
+  if(LAST) LAST.focus();
+}
+
+document.getElementById('mClose').addEventListener('click', closeModal);
+document.getElementById('veil').addEventListener('click', function(e){
+  if(e.target.id === 'veil') closeModal();
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeModal();
+});
+
+/* ===== 補助 ===== */
+var t;
+window.addEventListener('resize', function(){
+  clearTimeout(t);
+  t = setTimeout(function(){ if(BOOKS.length) render(); }, 150);
+});
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+</script>
+</body>
+</html>
